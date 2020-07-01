@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Azure.Storage.Blobs;
 using Plugin.Media;
 using Plugin.Media.Abstractions;
 using Xamarin.Forms;
@@ -44,6 +46,25 @@ namespace ImageUploader
             }
 
             SelectedImage.Source = ImageSource.FromStream(() => selectedImageFile.GetStream());
+
+            UploadImage(selectedImageFile.GetStream());
+        }
+
+        private async void UploadImage(Stream stream)
+        {
+            // Create a BlobServiceClient object which will be used to create a container client
+            BlobServiceClient blobServiceClient = new BlobServiceClient("DefaultEndpointsProtocol=https;AccountName=imagestoragemiraj;AccountKey=E2PaXcbuG9KyHwPR7ASVDczFeOeBxLyU0N/mcoXUhKzMzY9ugJkK24tr7Em8tNYef301tW4JMh+tGPJG51I3iQ==;EndpointSuffix=core.windows.net");
+            // Create the container and return a container client object
+            
+            BlobContainerClient containerClient = blobServiceClient.GetBlobContainerClient("imagecontainermiraj");
+            //to avoid authentication issues  go into your storage account > IAM > Add role and add the special permission for this type of request, STORAGE BLOB DATA CONTRIBUTOR. Then copied the new access keys over to here, and retried. Worked !!
+
+            var name = Guid.NewGuid().ToString();
+            // Get a reference to a blob
+            BlobClient blobClient = containerClient.GetBlobClient($"{name}.jpg");
+            await blobClient.UploadAsync(stream, true);
+
+            var url = blobClient.Uri.OriginalString;
         }
     }
 }
